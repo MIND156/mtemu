@@ -1,0 +1,92 @@
+
+gui_init
+
+gui_style "root" "backgroundColor" "#1e1e1e"
+gui_style "root" "display" "flex"
+gui_style "root" "flexDirection" "column"
+gui_style "root" "fontFamily" "sans-serif"
+
+gui_add "topbar" "box" "root"
+gui_style "topbar" "height" "52px"
+gui_style "topbar" "backgroundColor" "#2b2a33"
+gui_style "topbar" "display" "flex"
+gui_style "topbar" "alignItems" "center"
+gui_style "topbar" "padding" "0 8px"
+gui_style "topbar" "gap" "8px"
+gui_style "topbar" "borderBottom" "1px solid #000"
+gui_style "topbar" "boxShadow" "0 2px 5px rgba(0,0,0,0.2)"
+
+gui_add "tab_active" "box" "topbar"
+gui_style "tab_active" "padding" "6px 12px"
+gui_style "tab_active" "backgroundColor" "#42414d"
+gui_style "tab_active" "borderRadius" "4px"
+gui_style "tab_active" "color" "#fff"
+gui_style "tab_active" "fontSize" "12px"
+gui_style "tab_active" "display" "flex"
+gui_style "tab_active" "alignItems" "center"
+gui_set "tab_active" "text" "Wikipedia"
+
+# -- URL Input Container --
+gui_add "url_box" "box" "topbar"
+gui_style "url_box" "flex" "1"
+gui_style "url_box" "backgroundColor" "#1c1b22"
+gui_style "url_box" "borderRadius" "4px"
+gui_style "url_box" "padding" "2px 8px"
+gui_style "url_box" "display" "flex"
+gui_style "url_box" "alignItems" "center"
+
+gui_add "url_input" "input" "url_box"
+gui_style "url_input" "width" "100%"
+gui_style "url_input" "padding" "6px"
+gui_style "url_input" "border" "none"
+gui_style "url_input" "backgroundColor" "transparent"
+gui_style "url_input" "color" "#fff"
+gui_style "url_input" "outline" "none"
+gui_style "url_input" "fontSize" "14px"
+gui_set "url_input" "value" "https://www.wikipedia.org"
+gui_set "url_input" "placeholder" "Search or enter address"
+
+gui_add "btn_go" "button" "topbar"
+gui_set "btn_go" "text" "→"
+gui_style "btn_go" "width" "32px"
+gui_style "btn_go" "height" "32px"
+gui_style "btn_go" "cursor" "pointer"
+gui_style "btn_go" "backgroundColor" "#00ddff"
+gui_style "btn_go" "border" "none"
+gui_style "btn_go" "borderRadius" "4px"
+gui_style "btn_go" "fontWeight" "bold"
+gui_style "btn_go" "color" "#000"
+gui_style "btn_go" "display" "flex"
+gui_style "btn_go" "justifyContent" "center"
+gui_style "btn_go" "alignItems" "center"
+gui_event "btn_go" "click" "load_url"
+
+gui_add "btn_close" "button" "topbar"
+gui_set "btn_close" "text" "✕"
+gui_style "btn_close" "width" "32px"
+gui_style "btn_close" "height" "32px"
+gui_style "btn_close" "backgroundColor" "#ff5f56"
+gui_style "btn_close" "color" "white"
+gui_style "btn_close" "border" "none"
+gui_style "btn_close" "borderRadius" "4px"
+gui_style "btn_close" "cursor" "pointer"
+gui_style "btn_close" "fontWeight" "bold"
+gui_event "btn_close" "click" "exit_app"
+
+gui_add "content" "iframe" "root"
+gui_style "content" "flex" "1"
+gui_style "content" "width" "100%"
+gui_style "content" "border" "none"
+gui_style "content" "backgroundColor" "white"
+gui_set "content" "src" "https://www.wikipedia.org"
+
+stop
+
+label load_url
+gui_get "url_input" "value" target
+gui_set "content" "src" target
+stop
+
+label exit_app
+gui_close
+exit
