@@ -2,6 +2,7 @@ sys.window("Super Clicker", "360px", "550px")
 
 score = 0
 power = 1
+busy = 0
 
 bg_color = "#18181b"
 text_col = "#ffffff"
@@ -42,15 +43,21 @@ label on_tap
     math.add(score, power, "score")
     ui.set("score_val", "text", score)
     ui.style("btn_click", "transform: scale(0.95); border-color: #fff")
-    sys.wait(100)
+    sys.wait(50)
     ui.style("btn_click", "transform: scale(1); border-color: #7c3aed")
 stop
 
 label buy_power
+    if busy == 1 stop
+    
+    busy = 1
+    
     if score >= 50 goto do_upgrade
+    
     ui.style("btn_upg", "border-color: #ef4444")
     sys.wait(200)
     ui.style("btn_upg", "border-color: #3f3f46")
+    busy = 0
     stop
 
     label do_upgrade
@@ -63,4 +70,6 @@ label buy_power
     ui.style("btn_upg", "border-color: #22c55e")
     sys.wait(200)
     ui.style("btn_upg", "border-color: #3f3f46")
+    
+    busy = 0
 stop
