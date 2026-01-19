@@ -1,92 +1,100 @@
-
 gui_init
+gui_window "Firefox Nightly" "900px" "650px"
 
-gui_style "root" "backgroundColor" "#1e1e1e"
-gui_style "root" "display" "flex"
-gui_style "root" "flexDirection" "column"
-gui_style "root" "fontFamily" "sans-serif"
+gui_style "root" "display: flex; flex-direction: column; background: #0c0c0c; font-family: sans-serif; overflow: hidden"
 
-gui_add "topbar" "box" "root"
-gui_style "topbar" "height" "52px"
-gui_style "topbar" "backgroundColor" "#2b2a33"
-gui_style "topbar" "display" "flex"
-gui_style "topbar" "alignItems" "center"
-gui_style "topbar" "padding" "0 8px"
-gui_style "topbar" "gap" "8px"
-gui_style "topbar" "borderBottom" "1px solid #000"
-gui_style "topbar" "boxShadow" "0 2px 5px rgba(0,0,0,0.2)"
+gui_add "navbar" "box" "root"
+gui_style "navbar" "height: 50px; background: #1f1f1f; display: flex; align-items: center; padding: 0 10px; gap: 10px; border-bottom: 1px solid #333"
 
-gui_add "tab_active" "box" "topbar"
-gui_style "tab_active" "padding" "6px 12px"
-gui_style "tab_active" "backgroundColor" "#42414d"
-gui_style "tab_active" "borderRadius" "4px"
-gui_style "tab_active" "color" "#fff"
-gui_style "tab_active" "fontSize" "12px"
-gui_style "tab_active" "display" "flex"
-gui_style "tab_active" "alignItems" "center"
-gui_set "tab_active" "text" "Wikipedia"
+    gui_add "win_controls" "box" "navbar"
+    gui_style "win_controls" "display: flex; gap: 6px"
+    
+        gui_add "btn_close" "button" "win_controls"
+        gui_style "btn_close" "width: 12px; height: 12px; border-radius: 50%; background: #ff5f56; border: none; cursor: pointer"
+        gui_event "btn_close" "click" "app_exit"
 
-# -- URL Input Container --
-gui_add "url_box" "box" "topbar"
-gui_style "url_box" "flex" "1"
-gui_style "url_box" "backgroundColor" "#1c1b22"
-gui_style "url_box" "borderRadius" "4px"
-gui_style "url_box" "padding" "2px 8px"
-gui_style "url_box" "display" "flex"
-gui_style "url_box" "alignItems" "center"
+        gui_add "btn_min" "button" "win_controls"
+        gui_style "btn_min" "width: 12px; height: 12px; border-radius: 50%; background: #ffbd2e; border: none"
 
-gui_add "url_input" "input" "url_box"
-gui_style "url_input" "width" "100%"
-gui_style "url_input" "padding" "6px"
-gui_style "url_input" "border" "none"
-gui_style "url_input" "backgroundColor" "transparent"
-gui_style "url_input" "color" "#fff"
-gui_style "url_input" "outline" "none"
-gui_style "url_input" "fontSize" "14px"
-gui_set "url_input" "value" "https://www.wikipedia.org"
-gui_set "url_input" "placeholder" "Search or enter address"
+        gui_add "btn_max" "button" "win_controls"
+        gui_style "btn_max" "width: 12px; height: 12px; border-radius: 50%; background: #27c93f; border: none"
 
-gui_add "btn_go" "button" "topbar"
-gui_set "btn_go" "text" "→"
-gui_style "btn_go" "width" "32px"
-gui_style "btn_go" "height" "32px"
-gui_style "btn_go" "cursor" "pointer"
-gui_style "btn_go" "backgroundColor" "#00ddff"
-gui_style "btn_go" "border" "none"
-gui_style "btn_go" "borderRadius" "4px"
-gui_style "btn_go" "fontWeight" "bold"
-gui_style "btn_go" "color" "#000"
-gui_style "btn_go" "display" "flex"
-gui_style "btn_go" "justifyContent" "center"
-gui_style "btn_go" "alignItems" "center"
-gui_event "btn_go" "click" "load_url"
+    gui_add "url_container" "box" "navbar"
+    gui_style "url_container" "flex: 1; background: #2a2a2a; height: 32px; border-radius: 6px; display: flex; align-items: center; padding: 0 10px; border: 1px solid #333"
 
-gui_add "btn_close" "button" "topbar"
-gui_set "btn_close" "text" "✕"
-gui_style "btn_close" "width" "32px"
-gui_style "btn_close" "height" "32px"
-gui_style "btn_close" "backgroundColor" "#ff5f56"
-gui_style "btn_close" "color" "white"
-gui_style "btn_close" "border" "none"
-gui_style "btn_close" "borderRadius" "4px"
-gui_style "btn_close" "cursor" "pointer"
-gui_style "btn_close" "fontWeight" "bold"
-gui_event "btn_close" "click" "exit_app"
+        gui_add "url_icon" "text" "url_container"
+        gui_set "url_icon" "text" "🔒"
+        gui_style "url_icon" "font-size: 12px; margin-right: 8px; opacity: 0.7"
 
-gui_add "content" "iframe" "root"
-gui_style "content" "flex" "1"
-gui_style "content" "width" "100%"
-gui_style "content" "border" "none"
-gui_style "content" "backgroundColor" "white"
-gui_set "content" "src" "https://www.wikipedia.org"
+        gui_add "url_input" "input" "url_container"
+        gui_style "url_input" "flex: 1; background: transparent; border: none; color: white; outline: none; font-size: 13px"
+        gui_set "url_input" "value" "https://www.wikipedia.org"
+        gui_event "url_input" "change" "on_url_change"
+
+    gui_add "btn_go" "button" "navbar"
+    gui_set "btn_go" "text" "Go"
+    gui_style "btn_go" "padding: 5px 15px; background: #5a4bda; color: white; border: none; border-radius: 4px; cursor: pointer; font-weight: bold"
+    gui_event "btn_go" "click" "load_page"
+
+gui_add "tabs" "tabs" "root"
+gui_style "tabs" "flex: 1; display: flex; flex-direction: column; background: #fff"
+
+    # Вкладка 1: Web
+    gui_add "tab_web" "tab" "tabs"
+    gui_set "tab_web" "label" " 🌐 Internet "
+    
+        gui_add "webview" "iframe" "tab_web"
+        gui_style "webview" "width: 100%; height: 100%; border: none"
+        gui_set "webview" "src" "https://www.wikipedia.org"
+
+    gui_add "tab_settings" "tab" "tabs"
+    gui_set "tab_settings" "label" " ⚙ Settings "
+    gui_style "tab_settings" "padding: 30px; background: #18181b; color: #e4e4e7; display: flex; flex-direction: column; gap: 20px"
+
+        gui_add "st_head" "text" "tab_settings"
+        gui_set "st_head" "text" "Display Settings"
+        gui_style "st_head" "font-size: 24px; font-weight: bold; border-bottom: 1px solid #333; padding-bottom: 15px"
+
+        gui_add "box_bright" "box" "tab_settings"
+        gui_style "box_bright" "display: flex; flex-direction: column; gap: 8px"
+        
+            gui_add "lbl_bright" "text" "box_bright"
+            gui_set "lbl_bright" "text" "Screen Brightness"
+            gui_style "lbl_bright" "color: #a1a1aa; font-size: 14px"
+
+            gui_add "sl_brightness" "slider" "box_bright"
+            gui_set "sl_brightness" "min" "10"
+            gui_set "sl_brightness" "max" "100"
+            gui_set "sl_brightness" "value" "100"
+            gui_event "sl_brightness" "change" "update_brightness"
+
+        gui_add "btn_test" "button" "tab_settings"
+        gui_set "btn_test" "text" "Test Notification"
+        gui_style "btn_test" "width: 200px; padding: 10px; background: #27272a; border: 1px solid #3f3f46; color: white; border-radius: 6px; cursor: pointer; margin-top: 20px"
+        gui_event "btn_test" "click" "send_notif"
 
 stop
 
-label load_url
-gui_get "url_input" "value" target
-gui_set "content" "src" target
+
+label load_page
+    gui_get "url_input" "value" url
+    gui_set "webview" "src" url
+    notify "Loading page..." "info"
 stop
 
-label exit_app
-gui_close
+label on_url_change
+    goto load_page
+
+label update_brightness
+    gui_get "sl_brightness" "value" val
+    let filterStr = "brightness(" + (val / 100) + ")"
+    gui_style "root" "filter" filterStr
+stop
+
+label send_notif
+    notify "Settings Saved" "success"
+stop
+
+label app_exit
+    gui_close
 exit
