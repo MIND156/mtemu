@@ -1,0 +1,498 @@
+# == MTromium Browser v1.0 ==
+# A high-fidelity Chromium clone for MteEmulator
+# Features: Tabs, URL Bar, History, Iframe rendering, Settings
+
+# --- Window Setup ---
+sys.window("MTromium", "1024px", "768px")
+
+# --- Constants & Colors ---
+c_bg_frame = "#dfe9f5"
+c_bg_toolbar = "#ffffff"
+c_text_main = "#3c4043"
+c_tab_active = "#ffffff"
+c_tab_hover = "#f2f2f2"
+c_tab_inactive = "#dfe9f5"
+c_omnibox_bg = "#f1f3f4"
+c_border = "#dee1e6"
+
+# --- State Variables ---
+# We support 3 tabs for this emulation
+tab1_url = "chrome://newtab"
+tab1_title = "New Tab"
+tab2_url = "chrome://newtab"
+tab2_title = "New Tab"
+tab3_url = "chrome://newtab"
+tab3_title = "New Tab"
+
+# 0 = closed, 1 = open
+tab1_state = 1
+tab2_state = 0
+tab3_state = 0
+
+active_tab = 1
+temp_url = ""
+
+# --- Assets (SVGs) ---
+icon_back = "<svg viewBox='0 0 24 24' width='20' height='20' fill='#5f6368'><path d='M20 11H7.83l5.59-5.59L12 4l-8 8 8 8 1.41-1.41L7.83 13H20v-2z'/></svg>"
+icon_fwd = "<svg viewBox='0 0 24 24' width='20' height='20' fill='#5f6368'><path d='M12 4l-1.41 1.41L16.17 11H4v2h12.17l-5.58 5.59L12 20l8-8z'/></svg>"
+icon_refresh = "<svg viewBox='0 0 24 24' width='18' height='18' fill='#5f6368'><path d='M17.65 6.35C16.2 4.9 14.21 4 12 4c-4.42 0-7.99 3.58-7.99 8s3.57 8 7.99 8c3.73 0 6.84-2.55 7.73-6h-2.08c-.82 2.33-3.04 4-5.65 4-3.31 0-6-2.69-6-6s2.69-6 6-6c1.66 0 3.14.69 4.22 1.78L13 11h7V4l-2.35 2.35z'/></svg>"
+icon_home = "<svg viewBox='0 0 24 24' width='20' height='20' fill='#5f6368'><path d='M10 20v-6h4v6h5v-8h3L12 3 2 12h3v8z'/></svg>"
+icon_menu = "<svg viewBox='0 0 24 24' width='20' height='20' fill='#5f6368'><path d='M12 8c1.1 0 2-.9 2-2s-.9-2-2-2-2 .9-2 2 .9 2 2 2zm0 2c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2zm0 6c-1.1 0-2 .9-2 2s.9 2 2 2 2-.9 2-2-.9-2-2-2z'/></svg>"
+icon_user = "<div style='width:24px;height:24px;border-radius:50%;background:#1a73e8;color:white;display:flex;align-items:center;justify-content:center;font-size:12px;font-weight:bold'>M</div>"
+icon_close = "<svg viewBox='0 0 24 24' width='14' height='14' fill='#5f6368'><path d='M19 6.41L17.59 5 12 10.59 6.41 5 5 6.41 10.59 12 5 17.59 6.41 19 12 13.41 17.59 19 19 17.59 13.41 12z'/></svg>"
+icon_add = "<svg viewBox='0 0 24 24' width='20' height='20' fill='#5f6368'><path d='M19 13h-6v6h-2v-6H5v-2h6V5h2v6h6v2z'/></svg>"
+icon_star = "<svg viewBox='0 0 24 24' width='18' height='18' fill='#5f6368'><path d='M22 9.24l-7.19-.62L12 2 9.19 8.63 2 9.24l5.46 4.73L5.82 21 12 17.27 18.18 21l-1.63-7.03L22 9.24zM12 15.4l-3.76 2.27 1-4.28-3.32-2.88 4.38-.38L12 6.1l1.71 4.04 4.38.38-3.32 2.88 1 4.28L12 15.4z'/></svg>"
+
+# --- UI Construction ---
+
+# Root Container
+ui.box("root", "root")
+ui.style("root", "display:flex; flex-direction:column; height:100%; font-family:'Segoe UI', Roboto, sans-serif; background:" + c_bg_frame + "; overflow:hidden")
+
+# 1. TOP BAR (Tab Strip)
+ui.box("top_bar", "root")
+ui.style("top_bar", "height:38px; display:flex; align-items:flex-end; padding: 4px 8px 0 8px; gap:4px; -webkit-app-region: drag;")
+
+# --- Tab 1 ---
+ui.box("tab_1", "top_bar")
+ui.bind("tab_1", "mousedown", "click_tab_1")
+ui.box("tab_1_content", "tab_1")
+ui.style("tab_1_content", "display:flex; align-items:center; padding:0 10px; height:34px; border-radius: 8px 8px 0 0; width: 180px; justify-content:space-between; transition: background 0.1s")
+
+ui.text("t1_title", "tab_1_content", "New Tab")
+ui.style("t1_title", "font-size:12px; color:#3c4043; overflow:hidden; white-space:nowrap; max-width:140px; pointer-events:none")
+
+ui.box("t1_close", "tab_1_content")
+ui.bind("t1_close", "click", "close_tab_1")
+ui.style("t1_close", "width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;")
+ui.html("t1_close_ico", "t1_close", icon_close)
+
+# --- Tab 2 ---
+ui.box("tab_2", "top_bar")
+ui.bind("tab_2", "mousedown", "click_tab_2")
+ui.style("tab_2", "display:none") # Initially hidden
+ui.box("tab_2_content", "tab_2")
+ui.style("tab_2_content", "display:flex; align-items:center; padding:0 10px; height:34px; border-radius: 8px 8px 0 0; width: 180px; justify-content:space-between; transition: background 0.1s")
+
+ui.text("t2_title", "tab_2_content", "New Tab")
+ui.style("t2_title", "font-size:12px; color:#3c4043; overflow:hidden; white-space:nowrap; max-width:140px; pointer-events:none")
+
+ui.box("t2_close", "tab_2_content")
+ui.bind("t2_close", "click", "close_tab_2")
+ui.style("t2_close", "width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;")
+ui.html("t2_close_ico", "t2_close", icon_close)
+
+# --- Tab 3 ---
+ui.box("tab_3", "top_bar")
+ui.bind("tab_3", "mousedown", "click_tab_3")
+ui.style("tab_3", "display:none") # Initially hidden
+ui.box("tab_3_content", "tab_3")
+ui.style("tab_3_content", "display:flex; align-items:center; padding:0 10px; height:34px; border-radius: 8px 8px 0 0; width: 180px; justify-content:space-between; transition: background 0.1s")
+
+ui.text("t3_title", "tab_3_content", "New Tab")
+ui.style("t3_title", "font-size:12px; color:#3c4043; overflow:hidden; white-space:nowrap; max-width:140px; pointer-events:none")
+
+ui.box("t3_close", "tab_3_content")
+ui.bind("t3_close", "click", "close_tab_3")
+ui.style("t3_close", "width:16px; height:16px; border-radius:50%; display:flex; align-items:center; justify-content:center; cursor:pointer;")
+ui.html("t3_close_ico", "t3_close", icon_close)
+
+
+# --- New Tab Button ---
+ui.box("btn_new_tab", "top_bar")
+ui.bind("btn_new_tab", "click", "add_tab")
+ui.style("btn_new_tab", "width:28px; height:28px; display:flex; align-items:center; justify-content:center; border-radius:50%; cursor:pointer; margin-bottom: 3px; hover:background:#d1dbe7")
+ui.html("ico_plus", "btn_new_tab", icon_add)
+
+
+# 2. TOOLBAR
+ui.box("toolbar", "root")
+ui.style("toolbar", "background:" + c_bg_toolbar + "; padding: 8px; display:flex; align-items:center; gap:8px; border-bottom: 1px solid #dfe1e5; height: 44px")
+
+# Navigation Controls
+ui.box("nav_grp", "toolbar")
+ui.style("nav_grp", "display:flex; gap:4px")
+
+ui.box("btn_back", "nav_grp")
+ui.style("btn_back", "padding:4px; border-radius:50%; cursor:pointer")
+ui.html("i_b", "btn_back", icon_back)
+ui.bind("btn_back", "click", "go_back")
+
+ui.box("btn_fwd", "nav_grp")
+ui.style("btn_fwd", "padding:4px; border-radius:50%; cursor:pointer")
+ui.html("i_f", "btn_fwd", icon_fwd)
+
+ui.box("btn_rld", "nav_grp")
+ui.style("btn_rld", "padding:4px; border-radius:50%; cursor:pointer")
+ui.html("i_r", "btn_rld", icon_refresh)
+ui.bind("btn_rld", "click", "do_refresh")
+
+ui.box("btn_home", "nav_grp")
+ui.style("btn_home", "padding:4px; border-radius:50%; cursor:pointer")
+ui.html("i_h", "btn_home", icon_home)
+ui.bind("btn_home", "click", "go_home")
+
+# Omnibox (Address Bar)
+ui.box("omnibox", "toolbar")
+ui.style("omnibox", "flex:1; background:" + c_omnibox_bg + "; border-radius:20px; height:28px; display:flex; align-items:center; padding:0 12px; border: 1px solid transparent")
+
+ui.text("secure_lock", "omnibox", "🔒")
+ui.style("secure_lock", "font-size:12px; margin-right:8px; color:#1a73e8")
+
+ui.input("url_input", "omnibox", "")
+ui.attr("url_input", "placeholder", "Search Google or type a URL")
+ui.bind("url_input", "submit", "on_navigate")
+ui.style("url_input", "flex:1; background:transparent; border:none; outline:none; font-size:14px; color:#202124")
+
+ui.box("btn_star", "omnibox")
+ui.style("btn_star", "cursor:pointer; margin-left:8px")
+ui.html("i_s", "btn_star", icon_star)
+
+# Menu Area
+ui.box("menu_grp", "toolbar")
+ui.style("menu_grp", "display:flex; gap:12px; align-items:center; padding-left:4px")
+
+ui.html("i_u", "menu_grp", icon_user)
+
+ui.box("btn_menu", "menu_grp")
+ui.style("btn_menu", "cursor:pointer")
+ui.html("i_m", "btn_menu", icon_menu)
+ui.bind("btn_menu", "click", "open_menu")
+
+
+# 3. BOOKMARKS BAR
+ui.box("bookmarks", "root")
+ui.style("bookmarks", "height:28px; background:#fff; border-bottom:1px solid #dfe1e5; display:flex; align-items:center; padding:0 8px; gap:10px")
+
+# Helper to make bookmark items
+def create_bookmark
+    ui.box(bm_id, "bookmarks")
+    ui.style(bm_id, "display:flex; align-items:center; gap:4px; padding:4px 6px; border-radius:12px; cursor:pointer; font-size:11px; color:#5f6368")
+    ui.text(bm_id + "_t", bm_id, bm_name)
+    ui.html(bm_id + "_i", bm_id, "<img src='" + bm_icon + "' width='14' height='14'>")
+    return
+
+bm_id = "bm_gmail"
+bm_name = "Gmail"
+bm_icon = "https://ssl.gstatic.com/ui/v1/icons/mail/rfr/gmail.ico"
+call create_bookmark
+
+bm_id = "bm_yt"
+bm_name = "YouTube"
+bm_icon = "https://www.youtube.com/s/desktop/1a5b6748/img/favicon.ico"
+call create_bookmark
+
+bm_id = "bm_maps"
+bm_name = "Maps"
+bm_icon = "https://www.google.com/images/branding/product/ico/maps15/v1/32dp.ico"
+call create_bookmark
+
+
+# 4. VIEWPORT (The Web Content)
+ui.box("viewport_area", "root")
+ui.style("viewport_area", "flex:1; position:relative; background:#fff")
+
+# Internal Page (New Tab)
+ui.box("page_newtab", "viewport_area")
+ui.style("page_newtab", "width:100%; height:100%; display:flex; flex-direction:column; align-items:center; justify-content:center; background:#fff")
+ui.html("nt_logo", "page_newtab", "<h1 style='font-size:72px; font-weight:bold; color:#5f6368; letter-spacing:-2px; margin-bottom:20px'><span style='color:#4285f4'>G</span><span style='color:#ea4335'>o</span><span style='color:#fbbc05'>o</span><span style='color:#4285f4'>g</span><span style='color:#34a853'>l</span><span style='color:#ea4335'>e</span></h1>")
+ui.box("nt_search", "page_newtab")
+ui.style("nt_search", "width:500px; height:44px; border-radius:22px; border:1px solid #dfe1e5; display:flex; align-items:center; padding:0 15px; box-shadow:0 1px 6px rgba(32,33,36,0.1)")
+ui.text("nt_ph", "nt_search", "Search Google or type a URL")
+ui.style("nt_ph", "color:#9aa0a6; font-size:14px")
+
+# Internal Page (Settings)
+ui.box("page_settings", "viewport_area")
+ui.style("page_settings", "width:100%; height:100%; background:#f8f9fa; padding:20px; display:none")
+ui.html("set_head", "page_settings", "<h2 style='color:#202124; font-weight:400'>Settings</h2><hr style='border:0; border-top:1px solid #dadce0; margin:10px 0'>")
+ui.html("set_opts", "page_settings", "<div style='background:#fff; border-radius:8px; border:1px solid #dadce0; padding:15px; margin-top:20px'><div style='padding:10px 0; border-bottom:1px solid #f1f3f4'><b>Appearance</b><br>Theme: Default</div><div style='padding:10px 0; border-bottom:1px solid #f1f3f4'><b>Search Engine</b><br>Google</div><div style='padding:10px 0'><b>Default Browser</b><br>MTromium is your default browser</div></div>")
+
+# External Page (Iframe)
+ui.iframe("web_view", "viewport_area")
+ui.style("web_view", "width:100%; height:100%; border:none; display:none")
+
+
+# --- INITIALIZATION ---
+call update_tabs_ui
+call load_content
+stop
+
+
+# ==========================
+#         LOGIC
+# ==========================
+
+# --- TAB ADDITION ---
+label add_tab
+    if tab1_state == 0 goto open_t1
+    if tab2_state == 0 goto open_t2
+    if tab3_state == 0 goto open_t3
+    sys.alert("Max tabs reached (3) for this emulator version.")
+    stop
+
+    label open_t1
+        tab1_state = 1
+        tab1_url = "chrome://newtab"
+        tab1_title = "New Tab"
+        active_tab = 1
+        goto finish_add_tab
+
+    label open_t2
+        tab2_state = 1
+        tab2_url = "chrome://newtab"
+        tab2_title = "New Tab"
+        active_tab = 2
+        goto finish_add_tab
+
+    label open_t3
+        tab3_state = 1
+        tab3_url = "chrome://newtab"
+        tab3_title = "New Tab"
+        active_tab = 3
+        goto finish_add_tab
+
+    label finish_add_tab
+        call update_tabs_ui
+        call load_content
+stop
+
+# --- TAB CLOSING ---
+label close_tab_1
+    tab1_state = 0
+    if active_tab == 1 goto handle_close_active_1
+    call update_tabs_ui
+    stop
+    label handle_close_active_1
+        if tab2_state == 1 goto sw_2
+        if tab3_state == 1 goto sw_3
+        # All closed? Reset tab 1
+        tab1_state = 1
+        tab1_url = "chrome://newtab"
+        tab1_title = "New Tab"
+        call update_tabs_ui
+        call load_content
+        stop
+        label sw_2
+            active_tab = 2
+            call update_tabs_ui
+            call load_content
+            stop
+        label sw_3
+            active_tab = 3
+            call update_tabs_ui
+            call load_content
+            stop
+
+label close_tab_2
+    tab2_state = 0
+    if active_tab == 2 goto handle_close_active_2
+    call update_tabs_ui
+    stop
+    label handle_close_active_2
+        if tab1_state == 1 goto sw_1
+        if tab3_state == 1 goto sw_3
+        label sw_1
+            active_tab = 1
+            call update_tabs_ui
+            call load_content
+            stop
+
+label close_tab_3
+    tab3_state = 0
+    if active_tab == 3 goto handle_close_active_3
+    call update_tabs_ui
+    stop
+    label handle_close_active_3
+        if tab2_state == 1 goto sw_2b
+        if tab1_state == 1 goto sw_1b
+        label sw_2b
+            active_tab = 2
+            call update_tabs_ui
+            call load_content
+            stop
+        label sw_1b
+            active_tab = 1
+            call update_tabs_ui
+            call load_content
+            stop
+
+
+# --- TAB SWITCHING ---
+label click_tab_1
+    if active_tab == 1 stop
+    active_tab = 1
+    call update_tabs_ui
+    call load_content
+stop
+
+label click_tab_2
+    if active_tab == 2 stop
+    active_tab = 2
+    call update_tabs_ui
+    call load_content
+stop
+
+label click_tab_3
+    if active_tab == 3 stop
+    active_tab = 3
+    call update_tabs_ui
+    call load_content
+stop
+
+
+# --- NAVIGATION LOGIC ---
+label on_navigate
+    ui.get("url_input", "value", "raw_url")
+    temp_url = raw_url
+    
+    # Check for empty
+    str.len(temp_url, "len")
+    if len == 0 stop
+
+    # Handle internal URLs
+    if temp_url == "chrome://settings" goto set_url_state
+    if temp_url == "chrome://newtab" goto set_url_state
+    if temp_url == "mtemu://home" goto set_home_state
+
+    # Handle web URLs
+    str.includes(temp_url, ".", "has_dot")
+    if has_dot == 0 goto do_search
+    
+    str.includes(temp_url, "http", "has_http")
+    if has_http == 0 goto prepend_https
+    goto set_url_state
+
+    label prepend_https
+    str.cat("https://", temp_url, "temp_url")
+    goto set_url_state
+
+    label do_search
+    str.cat("https://www.google.com/search?q=", temp_url, "temp_url")
+    goto set_url_state
+
+    label set_home_state
+    temp_url = "chrome://newtab"
+    goto set_url_state
+
+    label set_url_state
+        # Update current tab data
+        if active_tab == 1 goto save_t1
+        if active_tab == 2 goto save_t2
+        if active_tab == 3 goto save_t3
+        
+        label save_t1
+            tab1_url = temp_url
+            if tab1_url == "chrome://newtab" tab1_title = "New Tab"
+            if tab1_url != "chrome://newtab" tab1_title = temp_url
+            goto finish_nav
+        label save_t2
+            tab2_url = temp_url
+            if tab2_url == "chrome://newtab" tab2_title = "New Tab"
+            if tab2_url != "chrome://newtab" tab2_title = temp_url
+            goto finish_nav
+        label save_t3
+            tab3_url = temp_url
+            if tab3_url == "chrome://newtab" tab3_title = "New Tab"
+            if tab3_url != "chrome://newtab" tab3_title = temp_url
+            goto finish_nav
+
+    label finish_nav
+        call update_tabs_ui
+        call load_content
+stop
+
+label go_back
+    sys.alert("History API not available in V1")
+stop
+
+label do_refresh
+    call load_content
+stop
+
+label go_home
+    ui.set("url_input", "value", "chrome://newtab")
+    call on_navigate
+stop
+
+label open_menu
+    # Simple redirect to settings for demo
+    ui.set("url_input", "value", "chrome://settings")
+    call on_navigate
+stop
+
+
+# ==========================
+#       SUBROUTINES
+# ==========================
+
+def update_tabs_ui
+    # Tab 1
+    if tab1_state == 1 goto render_t1
+    ui.style("tab_1", "display:none")
+    goto check_t2
+    label render_t1
+        ui.style("tab_1", "display:block")
+        ui.set("t1_title", "text", tab1_title)
+        if active_tab == 1 ui.style("tab_1_content", "background:" + c_tab_active)
+        if active_tab != 1 ui.style("tab_1_content", "background:" + c_tab_inactive)
+
+    # Tab 2
+    label check_t2
+    if tab2_state == 1 goto render_t2
+    ui.style("tab_2", "display:none")
+    goto check_t3
+    label render_t2
+        ui.style("tab_2", "display:block")
+        ui.set("t2_title", "text", tab2_title)
+        if active_tab == 2 ui.style("tab_2_content", "background:" + c_tab_active)
+        if active_tab != 2 ui.style("tab_2_content", "background:" + c_tab_inactive)
+
+    # Tab 3
+    label check_t3
+    if tab3_state == 1 goto render_t3
+    ui.style("tab_3", "display:none")
+    goto finish_tabs
+    label render_t3
+        ui.style("tab_3", "display:block")
+        ui.set("t3_title", "text", tab3_title)
+        if active_tab == 3 ui.style("tab_3_content", "background:" + c_tab_active)
+        if active_tab != 3 ui.style("tab_3_content", "background:" + c_tab_inactive)
+
+    label finish_tabs
+return
+
+def load_content
+    # Determine which URL to load based on active tab
+    curr_url = ""
+    if active_tab == 1 curr_url = tab1_url
+    if active_tab == 2 curr_url = tab2_url
+    if active_tab == 3 curr_url = tab3_url
+
+    # Update Omnibox
+    curr_display_url = curr_url
+    if curr_url == "chrome://newtab" curr_display_url = ""
+    ui.set("url_input", "value", curr_display_url)
+
+    # Route Internal Pages
+    if curr_url == "chrome://newtab" goto show_nt
+    if curr_url == "chrome://settings" goto show_settings
+    
+    # External Web
+    ui.style("page_newtab", "display:none")
+    ui.style("page_settings", "display:none")
+    ui.style("web_view", "display:block")
+    ui.set("web_view", "src", curr_url)
+    return
+
+    label show_nt
+        ui.style("web_view", "display:none")
+        ui.style("page_settings", "display:none")
+        ui.style("page_newtab", "display:flex")
+        return
+
+    label show_settings
+        ui.style("web_view", "display:none")
+        ui.style("page_newtab", "display:none")
+        ui.style("page_settings", "display:block")
+        return
+return
