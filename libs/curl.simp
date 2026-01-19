@@ -1,0 +1,11 @@
+# Name: curl
+# Description: Simple HTTP GET request utility
+# Author: mindpy
+let url = args[0]
+if !url goto usage
+print "Fetching " + url + "..."
+http_get url response
+print response
+exit
+label usage
+print "Usage: curl <url>"
